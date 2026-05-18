@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Waitlist {
+  id        String   @id
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model ApplicationLog {
+  id           String   @id @default(uuid())
+  jobUrl       String
+  jobTitle     String?
+  company      String?
+  status       String
+  errorMessage String?
+  appliedAt    DateTime @default(now())
+}
