@@ -1,11 +1,3 @@
-Between the two, **`career-autopilot`** is significantly more impressive and presentable for engineering recruiters.
-
-While the `autoapplier` repository is a solid Next.js waitlist and landing page MVP, `career-autopilot` demonstrates senior-level engineering maturity. It features enterprise-grade CI/CD pipelines (including CodeQL, SBOM generation, and automated releases), extensive open-source governance (Code of Conduct, Contributing guides, and multi-language READMEs), and a robust backend architecture using Go for a Terminal UI alongside AI agent orchestration. It shows you know how to build, scale, and maintain complex systems.
-
-Here is the README generated for `career-autopilot` using the requested template:
-
----
-
 # Career Autopilot Engine
 
 An autonomous, AI-driven job application engine featuring a Go-based Terminal UI, multi-agent orchestration, and deterministic pipeline tracking.
