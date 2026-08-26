@@ -94,7 +94,8 @@ The Go TUI acts as an observability layer over the local pipeline rather than as
                   |
                   v
         Deterministic checks
-        /                     duplicate             new job
+        /
+   duplicate             new job
       |                     |
      DROP                   v
                    LLM semantic reasoning
