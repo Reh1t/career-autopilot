@@ -1,134 +1,216 @@
 # Career Autopilot Engine
 
-An autonomous, AI-driven job application engine featuring a Go-based Terminal UI, multi-agent orchestration, and deterministic pipeline tracking.
+A local agentic job-processing pipeline combining deterministic job deduplication, LLM-based suitability analysis, application-state tracking, CV synchronization, and a lightweight Go terminal dashboard.
 
-# Introduction & Goals
+> **Project status:** Independent engineering project / local prototype. It automates a personal workflow and is not presented as a production SaaS platform.
 
-This project automates the tedious, repetitive phases of the job search. It intercepts job postings, processes the data through Claude and Gemini AI agents for suitability scoring, synchronizes resume updates, and tracks application pipelines through a dedicated Go-based Terminal UI.
+## Problem
 
-* **What data I am working with:** Raw HTML/JSON job descriptions, YAML/JSON configuration profiles, and markdown-based CV revisions.
+Job-search automation mixes deterministic work with probabilistic reasoning.
 
+Some tasks should not require an LLM:
 
-* **What tools I am using:** Go for the dashboard and UI, Node.js/Bash for stream processing and deduplication, and LLM APIs (Claude/Gemini) for semantic reasoning.
+- duplicate detection
+- local-state validation
+- CV synchronization
+- application tracking
 
+Other tasks benefit from semantic reasoning:
 
-* **What I am doing with these tools:** Constructing a local agentic pipeline that filters duplicate job listings, dynamically tailors application assets, and provides real-time visual feedback on the pipeline's progress.
+- interpreting job requirements
+- comparing requirements with a candidate profile
+- deciding whether a position is worth pursuing
 
-
-
-**Goal 1:** Eliminate duplicate effort and irrelevant job matching.
-**How I know it worked:** The pipeline flags and drops 100% of previously processed or duplicate job IDs using the `dedup-tracker.mjs` before invoking expensive LLM calls.
-
-**Goal 2:** Provide real-time operational observability without a heavy web frontend.
-**How I know it worked:** The Go dashboard renders pipeline metrics and application progress in the terminal under 50ms per state update.
-
-**Goal 3:** Maintain enterprise-grade code quality and security.
-**How I know it worked:** 100% of pull requests pass automated CodeQL security scanning, SBOM generation, and Go test suites via GitHub Actions.
+Career Autopilot separates those concerns.
 
 ## Architecture
 
-# Contents
+```text
+Job Sources
+   |
+   v
++---------------------+
+| Ingestion / Parsing |
++----------+----------+
+           |
+           v
++---------------------+
+| Deterministic       |
+| Deduplication       |
++----------+----------+
+           |
+           v
++---------------------+        +--------------------+
+| Candidate Profile   |        | Job Specification  |
+| profile.yml         |        | normalized data    |
++----------+----------+        +---------+----------+
+           |                             |
+           +-------------+---------------+
+                         |
+                         v
+              +----------------------+
+              | Career-Ops AI Agents |
+              | Claude / Gemini      |
+              +----------+-----------+
+                         |
+                         v
+              +----------------------+
+              | Suitability /       |
+              | Apply-or-Skip Logic |
+              +----------+-----------+
+                         |
+                 +-------+-------+
+                 |               |
+                 v               v
+               SKIP           STAGING
+                                  |
+                                  v
+                          CV Synchronization
+                                  |
+                                  v
+                          Application Tracker
+                                  |
+                                  v
+                          Go Terminal UI
+```
 
-* [The Data Set](https://www.google.com/search?q=%23the-data-set)
-* [Constraints](https://www.google.com/search?q=%23constraints)
-* [Used Tools](https://www.google.com/search?q=%23used-tools)
-* [Connect](https://www.google.com/search?q=%23connect)
-* [Buffer](https://www.google.com/search?q=%23buffer)
-* [Processing](https://www.google.com/search?q=%23processing)
-* [Storage](https://www.google.com/search?q=%23storage)
-* [Visualization](https://www.google.com/search?q=%23visualization)
+The Go TUI acts as an observability layer over the local pipeline rather than as part of the LLM reasoning path.
 
+## Core workflow
 
-* [Pipelines](https://www.google.com/search?q=%23pipelines)
-* [Stream Processing](https://www.google.com/search?q=%23stream-processing)
-* [Storing Data Stream](https://www.google.com/search?q=%23storing-data-stream)
-* [Processing Data Stream](https://www.google.com/search?q=%23processing-data-stream)
+1. Job descriptions enter the local pipeline.
+2. Ingestion normalizes available job data.
+3. `dedup-tracker.mjs` removes already-processed/duplicate job IDs before expensive model calls.
+4. Candidate profile and job information are supplied to the career-ops agents.
+5. Claude/Gemini-based agents perform semantic suitability analysis.
+6. Relevant jobs move into the staging/application workflow.
+7. CV synchronization checks ensure the current application asset is used.
+8. Local state is exposed through the Go terminal dashboard.
 
+## Deterministic before probabilistic
 
-* [Batch Processing](https://www.google.com/search?q=%23batch-processing)
-* [Visualizations](https://www.google.com/search?q=%23visualizations)
+```text
+                 JOB
+                  |
+                  v
+        Deterministic checks
+        /                     duplicate             new job
+      |                     |
+     DROP                   v
+                   LLM semantic reasoning
+                           |
+                    +------+------+
+                    |             |
+                   SKIP          APPLY
+                                  |
+                                  v
+                           deterministic
+                           CV/state checks
+```
 
+Duplicate detection is deterministic and inexpensive, so the system avoids spending an LLM call on a decision ordinary program logic can make exactly.
 
-* [Demo](https://www.google.com/search?q=%23demo)
-* [What Breaks](https://www.google.com/search?q=%23what-breaks)
-* [Conclusion](https://www.google.com/search?q=%23conclusion)
-* [Follow Me On](https://www.google.com/search?q=%23follow-me-on)
-* [Appendix](https://www.google.com/search?q=%23appendix)
+## Agentic layer
 
-# The Data Set
+The `career-ops` workflow performs semantic reasoning over job requirements and candidate information.
 
-* **Explain the data set:** The data consists of inbound job specifications scraped or fed into the engine, alongside local configuration profiles and tracking logs.
-* **Why I chose it:** Job descriptions are notoriously unstructured and verbose. It is the perfect candidate for AI-driven normalization and extraction.
-* **What is problematic:** Job boards frequently change DOM structures, and descriptions contain massive amounts of boilerplate.
-* **What I want to do with it:** Extract hard requirements, match them against a user's `profile.yml`, and generate a deterministic "apply/skip" score.
+The surrounding pipeline remains deterministic where possible, so the AI layer does not become the source of truth for application state.
 
+## Data contracts
 
+The repository uses local YAML/JSON state and `DATA_CONTRACT.md` to define expected pipeline structures.
 
-## How much data is it
+This matters because the Go dashboard and application-tracking scripts consume the AI pipeline's outputs. Model output is therefore treated as application data that must conform to a contract rather than arbitrary text passed directly downstream.
 
-Assuming the engine scans 500 job postings a day. Each posting averages 4 KB of text, resulting in 2 MB of raw text daily. Once normalized and filtered down to the top 10% of relevant matches, the pipeline processes 50 active applications a day. Over a 30-day aggressive job search, this yields 1,500 tracked pipeline events. The metadata fits comfortably within a few megabytes of local JSON/YAML storage, meaning database infrastructure was entirely unnecessary for the MVP.
+## Go terminal dashboard
 
-# Constraints
+The project uses Go for a lightweight terminal UI instead of another web frontend.
 
-* **Budget:** Built to run locally using developer API credits for Claude/Gemini.
+The dashboard:
 
+- displays pipeline progress
+- exposes application state
+- renders a Kanban-style view
+- consumes local pipeline state
+- keeps the operational interface lightweight
 
-* **Compute:** Entirely local execution; the Go dashboard and Node scripts run concurrently on a standard developer laptop.
+The repository reports sub-50ms state-update rendering in its local environment. This is a prototype measurement, not a production performance guarantee.
 
+## Engineering decisions
 
-* **Data you do not control:** Third-party job board rate limits, unannounced schema changes, and LLM API latency.
+### Deduplicate before LLM calls
 
-# Used Tools
+Duplicate detection is deterministic and inexpensive. Running the same job through an LLM multiple times wastes latency and API budget.
 
-## Connect
+### Flat files for a single-user MVP
 
-*Node.js & Shell Scripts:* Tools like `check-liveness.mjs` and `cv-sync-check.mjs` handle the ingestion and synchronization of external state.
+The system is local and single-user, so JSON/YAML files are sufficient for the current state-management requirements. A database becomes more useful for concurrency, transactional state, and larger history.
 
-## Buffer
+### Go TUI instead of a web dashboard
 
-*Local File System:* Since this runs locally for a single user, standard I/O and local tracking logs (`/logs` and `/tracker-additions`) act as the buffer. Considered SQLite, but flat files are faster to iterate on for a single-tenant CLI tool.
+The dashboard is an operational interface for a developer workflow. A terminal UI avoids adding another application stack just for visualization.
 
-## Processing
+### Separate AI reasoning from state management
 
-*Bash & AI Agents:* `batch-runner.sh` handles orchestration, passing parsed data to specialized agent skills (`career-ops`) governed by strict prompts.
+The LLM can recommend an action, but deterministic scripts maintain the actual pipeline state.
 
-## Storage
+## Failure modes and trade-offs
 
-*Flat Files & YAML:* `DATA_CONTRACT.md` enforces schema validity. User profiles are maintained in `profile.yml`.
+### Job-source changes
 
-## Visualization
+External job pages can change their DOM or data structures.
 
-*Go Dashboard:* A custom TUI built in Go (`dashboard/main.go`) utilizing Catppuccin themes to render pipeline progress (`progress.go`) and application viewing (`viewer.go`). Considered building a React web app, but a TUI uses a fraction of the memory and keeps the developer in the terminal.
+**Mitigation:** isolate ingestion from downstream processing.
 
-# Pipelines
+### LLM rate limits
 
-## Stream Processing
+Parallel processing can hit provider rate limits.
 
-Data enters the system, is immediately checked against the `dedup-tracker.mjs` to prevent duplicate LLM calls, and is then evaluated by the career-ops agents. Valid matches are moved to the staging phase, and the CV is synchronized (`cv-sync-check.mjs`) to ensure the latest version is used.
+**Mitigation:** the batch runner includes backoff behavior, but the local prototype does not claim a fully durable distributed job queue.
 
-## Batch Processing
+### Flat-file corruption
 
-The `batch-runner.sh` allows for asynchronous processing of multiple scraped job descriptions in parallel, respecting LLM API rate limits through built-in backoff.
+A process terminated during a write could corrupt local tracker state.
 
-## Visualizations
+**Possible improvement:** SQLite or another transactional state store with durable writes.
 
-The Go application continuously reads the local state and updates the terminal UI, providing a real-time Kanban-style view of the application pipeline.
+### LLM output changes
 
-# Demo
+Different providers can return semantically similar but structurally different outputs.
 
-A demonstration of the Go TUI and agent pipeline in action:
+**Mitigation:** enforce a shared data contract before downstream components consume results.
 
+## Validation and observability
 
-# What Breaks
+The project emphasizes deterministic controls around the AI workflow:
 
-* **Job Board DOM Mutations:** Web scrapers feeding the engine will break when target sites update their CSS classes. I accepted this risk by isolating the ingestion layer from the processing layer.
-* **LLM Rate Limits:** Processing 100+ jobs concurrently triggers HTTP 429 Too Many Requests from Anthropic/Google. The batch runner will stall and require manual restart.
-* **State Corruption:** If the CLI is killed mid-write, the flat-file JSON trackers can corrupt. I skipped implementing a WAL (Write-Ahead Log) as the data is easily reproducible.
+- duplicate jobs are filtered before model calls
+- pipeline state is tracked explicitly
+- data contracts define expected structures
+- Go provides a live operational view
+- CI includes Go tests, CodeQL scanning, and SBOM generation
 
-# Conclusion
+These are engineering controls around a local agentic workflow, not proof of production reliability.
 
-This project successfully bridges the gap between raw web scraping and actionable career advancement. By relying on Go for a highly responsive TUI and isolated Node.js/Bash scripts for pipeline execution, the architecture remains modular and lightweight. The biggest challenge was normalizing the outputs of various LLMs into a strict data contract, ensuring the Go dashboard wouldn't panic on malformed JSON.
+## Production considerations
 
-# Follow Me On
+If expanded beyond a personal local tool, the main changes would include durable state storage, queue-based execution, distributed workers, provider fallback, structured evaluation of suitability decisions, monitored job-source adapters, application auditing, secret management, cost/token telemetry, multi-user isolation, and stronger failure recovery.
 
-[LinkedIn](https://www.linkedin.com/in/rehantariqbhatti)
+## What I learned
+
+Agentic systems benefit from a **deterministic shell around probabilistic reasoning**.
+
+The LLM is useful for interpreting ambiguous job requirements, but it should not be responsible for duplicate detection, application state, file synchronization, or the basic integrity of the pipeline.
+
+## Current scope
+
+Career Autopilot is best described as:
+
+> **A local agentic job-processing and application workflow combining deterministic automation with LLM-based semantic reasoning and terminal observability.**
+
+It is not presented as an autonomous production job-application service.
+
+## Links
+
+- GitHub: https://github.com/Reh1t/career-autopilot
+- LinkedIn: https://www.linkedin.com/in/rehantariqbhatti
