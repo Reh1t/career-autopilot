@@ -1,0 +1,176 @@
+# ==============================================================================
+# Career Autopilot - Root .gitignore
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Environment Variables & Secrets (CRITICAL: Never commit credentials)
+# ------------------------------------------------------------------------------
+# General and service-specific env files
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+scraper/.env
+scraper/.env.*
+scrapper/.env
+scrapper/.env.*
+web/.env*.local
+engine/.env
+
+# Allow template/example files
+!.env.example
+!**/.env.example
+!*.env.example
+
+# Keys & Certificates
+*.pem
+*.key
+*.cert
+*.crt
+
+# ------------------------------------------------------------------------------
+# Scraper & Python Artifacts (scraper/)
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Python Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Python Testing & Type Checking
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ------------------------------------------------------------------------------
+# Web & Engine JavaScript / TypeScript Artifacts (web/ & engine/)
+# ------------------------------------------------------------------------------
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js Build Outputs (web/)
+.next/
+out/
+.vercel
+
+# TypeScript cache
+*.tsbuildinfo
+next-env.d.ts
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+bun.lockb
+bun.lock
+
+# Test Coverage
+coverage/
+
+# ------------------------------------------------------------------------------
+# Go & Binaries (engine/dashboard/)
+# ------------------------------------------------------------------------------
+*.exe
+*.exe~
+*.dll
+*.dylib
+*.test
+career-dashboard
+engine/dashboard/career-dashboard
+bin/
+
+# ------------------------------------------------------------------------------
+# Engine - User Personal Data & Local Runtime State
+# ------------------------------------------------------------------------------
+engine/cv.md
+engine/data/applications.md
+engine/data/pipeline.md
+engine/data/scan-history.tsv
+engine/reports/*.md
+!engine/reports/.gitkeep
+engine/output/*
+!engine/output/.gitkeep
+engine/batch/logs/*
+!engine/batch/logs/.gitkeep
+engine/batch/batch-state.tsv
+engine/batch/batch-input.tsv
+engine/batch/tracker-additions/**/*.tsv
+!engine/batch/tracker-additions/.gitkeep
+engine/jds/*
+!engine/jds/.gitkeep
+engine/writing-samples/*
+!engine/writing-samples/README.md
+engine/config/profile.yml
+engine/portals.yml
+engine/modes/_profile.md
+engine/.update-dismissed
+engine/.update-lock
+engine/.resolved-prompt-*
+
+# ------------------------------------------------------------------------------
+# Operating System Files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+*.mov
+*.mp4
+
+# ------------------------------------------------------------------------------
+# IDE & Editor Files
+# ------------------------------------------------------------------------------
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# AI Local Config & Cache
+.claude/settings.local.json
+.claude/memory/
